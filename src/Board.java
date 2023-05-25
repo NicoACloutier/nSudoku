@@ -192,19 +192,21 @@ public class Board {
     }
 	
 	//return how many times a board can be solved (stops after 2)
-	private static int solveCount(Integer[][] maskedBoard, int row, int col, int count, int n, boolean[][] mask) {
+	private static int solveCount(Integer[][] maskedBoard, int row, int col, int count, int n, boolean[][] mask, long limit, long start) {
+		if (System.currentTimeMillis() - start >= limit) { return -1; }
 		if (row == maskedBoard.length) { Board.maskBoardInPlace(maskedBoard, mask); return 1; }
-		else if (col == maskedBoard.length) { count += Board.solveCount(maskedBoard, row+1, 0, count, n, mask); return count; }
-		else if (maskedBoard[row][col] != null) { count += Board.solveCount(maskedBoard, row, col+1, count, n, mask); return count; }
+		else if (col == maskedBoard.length) { count += Board.solveCount(maskedBoard, row+1, 0, count, n, mask, limit, start); return count; }
+		else if (maskedBoard[row][col] != null) { count += Board.solveCount(maskedBoard, row, col+1, count, n, mask, limit, start); return count; }
 		
 		for (int i = 1; i <= maskedBoard.length && count < 2; i++) {
 			maskedBoard[row][col] = i;
 			if (Board.isValidPlacement(maskedBoard, col, row, n)) {
-				count += Board.solveCount(maskedBoard, row+1, col, count, n, mask);
+				count += Board.solveCount(maskedBoard, row+1, col, count, n, mask, limit, start);
 			}
 			else { maskedBoard[row][col] = null; }
 		}
 		
+		if (System.currentTimeMillis() - start >= limit) { return -1; }
 		return count;
 	}
 	
@@ -230,8 +232,11 @@ public class Board {
 	
 	public Board(Integer enteredN) {
 		n = enteredN;
-		makeBoard();
-		makeMask();
+		int response = -1;
+		while (response == -1) {
+			makeBoard();
+			response = makeMask();
+		}
 		
 		/*
 		for (int i = 0; i < board.length; i++) {
@@ -288,7 +293,10 @@ public class Board {
 	}
 	
 	//make a board mask at random
-	private void makeMask() {
+	private int makeMask() {
+		long limit = (long) Board.getLimit(n);
+		long time = System.currentTimeMillis();
+		
 		mask = new boolean[n*n][n*n];
 		for (int i = 0; i < mask.length; i++) {
 			for (int j = 0; j < mask.length; j++) { mask[i][j] = false; }
@@ -302,9 +310,12 @@ public class Board {
 			int x = place % (mask.length);
 			int y = place / (mask.length);
 			mask[x][y] = true;
-			int count = Board.solveCount(getMaskedBoard(), 0, 0, 0, n, mask);
+			int count = Board.solveCount(getMaskedBoard(), 0, 0, 0, n, mask, limit, time);
+			if (count == -1) { return -1; }
 			if (count > 1) { mask[x][y] = false; }
 		}
+		
+		return 1;
 	}
 	
 	public Integer getN() { return n; }
