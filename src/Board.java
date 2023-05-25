@@ -12,7 +12,10 @@ public class Board {
 	private boolean[][] mask;
 	private ChoiceBox<Integer>[][] boxes;
 	
-	private static double getLimit(Integer aN) { return 500 * aN; }
+	private static double getLimit(Integer aN) {
+		if (aN <= 4) { return 100 * aN; } //linear for smaller numbers
+		else { return 100 * Math.pow(1.75, aN); } //for larger, exponential limit
+	}
 	
 	//convert a board to masked board given a mask. 
 	//`maskedBoard[i][j]` will be set to `null` for all `i` and `j` such that `aMask[i][j]`
@@ -96,13 +99,12 @@ public class Board {
 		
 		ArrayList<Integer> numbers = Board.makePossible(aBoard, row, col, aN);
 		if (numbers.size() == 0) { return 0; }
-		for (int i = 1; i <= aBoard.length; i++) { numbers.add(i); }
 		Collections.shuffle(numbers);
 		
 		for (int i = 0; i < numbers.size(); i++) {
 			Integer temp = numbers.get(i);
 			aBoard[row][col] = temp;
-			if (Board.isValidPlacement(aBoard, col, row, aN) && fillIn(aBoard, row, col+1, aN, start, limit) == 1) { break; }
+			if (fillIn(aBoard, row, col+1, aN, start, limit) == 1) { break; }
 			else if (i == numbers.size()-1) { aBoard[row][col] = null; return 0; }
 			else { aBoard[row][col] = null; }
 		}
@@ -112,18 +114,20 @@ public class Board {
 	}
 	
 	//return how many times a board can be solved (stops after 2)
-	private static int solveCount(Integer[][] maskedBoard, int row, int col, int count, int n, boolean[][] mask, long limit, long start) {
+	private static int solveCount(Integer[][] maskedBoard, int row, int col, int count, int n, boolean[][] mask, long limit, long start, Integer aN) {
 		if (System.currentTimeMillis() - start >= limit) { return -1; }
 		if (row == maskedBoard.length) { Board.maskBoardInPlace(maskedBoard, mask); return 1; }
-		else if (col == maskedBoard.length) { count += Board.solveCount(maskedBoard, row+1, 0, count, n, mask, limit, start); return count; }
-		else if (maskedBoard[row][col] != null) { count += Board.solveCount(maskedBoard, row, col+1, count, n, mask, limit, start); return count; }
+		else if (col == maskedBoard.length) { count += Board.solveCount(maskedBoard, row+1, 0, count, n, mask, limit, start, aN); return count; }
+		else if (maskedBoard[row][col] != null) { count += Board.solveCount(maskedBoard, row, col+1, count, n, mask, limit, start, aN); return count; }
 		
-		for (int i = 1; i <= maskedBoard.length && count < 2; i++) {
-			maskedBoard[row][col] = i;
-			if (Board.isValidPlacement(maskedBoard, col, row, n)) {
-				count += Board.solveCount(maskedBoard, row+1, col, count, n, mask, limit, start);
-			}
-			else { maskedBoard[row][col] = null; }
+		ArrayList<Integer> numbers = Board.makePossible(maskedBoard, row, col, aN);
+		if (numbers.size() == 0) { return 0; }
+		Collections.shuffle(numbers);
+		
+		for (int i = 0; i < numbers.size() && count < 2; i++) {
+			Integer temp = numbers.get(i);
+			maskedBoard[row][col] = temp;
+			count += Board.solveCount(maskedBoard, row+1, col, count, n, mask, limit, start, aN);
 		}
 		
 		if (System.currentTimeMillis() - start >= limit) { return -1; }
@@ -186,7 +190,7 @@ public class Board {
 	
 	//make a board mask at random
 	private int makeMask() {
-		long limit = (long) Board.getLimit(n);
+		long limit = (long) (5 * Board.getLimit(n));
 		long time = System.currentTimeMillis();
 		
 		mask = new boolean[n*n][n*n];
@@ -202,12 +206,28 @@ public class Board {
 			int x = place % (mask.length);
 			int y = place / (mask.length);
 			mask[x][y] = true;
-			int count = Board.solveCount(getMaskedBoard(), 0, 0, 0, n, mask, limit, time);
+			int count = Board.solveCount(getMaskedBoard(), 0, 0, 0, n, mask, limit, time, n);
 			if (count == -1) { return -1; }
 			if (count > 1) { mask[x][y] = false; }
 		}
 		
 		return 1;
+	}
+	
+	//check if a cell is correct
+	public boolean checkBox(int row, int col) {
+		if (boxes[row][col] != null && boxes[row][col].getValue() != null) { return (board[row][col].equals(boxes[row][col].getValue())); }
+		else { return true; }
+	}
+	
+	//check if a board is correct
+	public boolean checkBoard() {
+		for (int i = 0; i < boxes.length; i++) {
+			for (int j = 0; j < boxes.length; j++) {
+				if (!checkBox(i, j)) { return false; }
+			}
+		}
+		return true;
 	}
 	
 	public Integer getN() { return n; }
