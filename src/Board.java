@@ -12,7 +12,7 @@ public class Board {
 	private boolean[][] mask;
 	private ChoiceBox<Integer>[][] boxes;
 	
-	private static double getLimit(Integer aN) { return 1000 * aN; }
+	private static double getLimit(Integer aN) { return 500 * aN; }
 	
 	//convert a board to masked board given a mask. 
 	//`maskedBoard[i][j]` will be set to `null` for all `i` and `j` such that `aMask[i][j]`
@@ -36,70 +36,6 @@ public class Board {
 			}
 		}
 	}
-	
-	//check if a row is valid
-    private static boolean checkRow(Integer[] row, Integer aN) {
-        Integer[] numbers = new Integer[row.length];
-		for (int i = 0; i < row.length; i++) { numbers[i] = 0; }
-		
-        int number;
-        for (int i = 0; i < row.length; i++) {
-            if (row[i] != null) {
-                number = row[i];
-                if (numbers[number-1] == 0) { numbers[number-1]++; }
-                else { return false; }
-            }
-        }
-        return true;
-    }
-
-	//check if a column is valid
-    private static boolean checkColumn(Integer[][] aBoard, int column, Integer aN) {
-        Integer[] numbers = new Integer[aBoard.length];
-		for (int i = 0; i < aBoard.length; i++) { numbers[i] = 0; }
-		
-        int number;
-        for (int i = 0; i < aBoard.length; i++) {
-            if (aBoard[i][column] != null) {
-                number = aBoard[i][column];
-                if (numbers[number-1] == 0) { numbers[number-1]++; }
-                else { return false; }
-            }
-        }
-        return true;
-    }
-
-	//check if an n*n box is valid
-    private static boolean checkBox(Integer[][] aBoard, int x, int y, Integer aN) {
-        Integer[] numbers = new Integer[aBoard.length];
-		for (int i = 0; i < aBoard.length; i++) { numbers[i] = 0; }
-		
-        int number;
-        for (int i = 0; i < aN; i++) {
-            for (int j = 0; j < aN; j++) {
-                if (aBoard[x+i][y+j] != null) {
-                    number = aBoard[x+i][y+j];
-                    if (numbers[number-1] == 0) { numbers[number-1]++; }
-                    else { return false; }
-                }
-            }
-        }
-        return true;
-    }
-
-	//check is sudoku board is valid
-	private static boolean isValidSudoku(Integer[][] aBoard, Integer aN) {
-        for (int i = 0; i < aBoard.length; i++) {
-            if (!Board.checkRow(aBoard[i], aN)) { return false; }
-            if (!Board.checkColumn(aBoard, i, aN)) { return false; }
-        }
-        for (int i = 0; i < aBoard.length; i += aN) {
-            for (int j = 0; j < aBoard.length; j += aN) {
-                if (!Board.checkBox(aBoard, i, j, aN)) { return false; }
-            }
-        }
-        return true;
-    }
 	
 	//get all of the possible numbers for a given cell
 	private static ArrayList<Integer> makePossible(Integer[][] aBoard, int x, int y, Integer aN) {
@@ -174,22 +110,6 @@ public class Board {
 		if (System.currentTimeMillis() - start >= limit) { return -1; }
 		return 1;
 	}
-
-	//solve sudoku using backtracking
-    private static boolean solve(Integer[][] aBoard, int row, int col, Integer aN) {
-        if (row == aBoard.length) { return true; }
-        if (col == aBoard[0].length) { return solve(aBoard, row + 1, 0, aN); }
-        if (aBoard[row][col] != null) { return solve(aBoard, row, col + 1, aN); }
-        
-        for (int num = 1; num <= aBoard.length; num++) {
-            if (isValidSudoku(aBoard, aN)) {
-                aBoard[row][col] = num;
-                if (solve(aBoard, row, col + 1, aN)) { return true; }
-                aBoard[row][col] = null;
-            }
-        }
-        return false;
-    }
 	
 	//return how many times a board can be solved (stops after 2)
 	private static int solveCount(Integer[][] maskedBoard, int row, int col, int count, int n, boolean[][] mask, long limit, long start) {
@@ -237,34 +157,6 @@ public class Board {
 			makeBoard();
 			response = makeMask();
 		}
-		
-		/*
-		for (int i = 0; i < board.length; i++) {
-			for (int j = 0; j < board[i].length; j++) {
-				System.out.print(board[i][j]);
-				System.out.print(" ");
-			}
-			System.out.println();
-		}
-		
-		System.out.println();
-		for (int i = 0; i < mask.length; i++) {
-			for (int j = 0; j < mask[i].length; j++) {
-				System.out.print(mask[i][j]);
-				System.out.print(" ");
-			}
-			System.out.println();
-		}
-		
-		System.out.println();
-		for (int i = 0; i < getMaskedBoard().length; i++) {
-			for (int j = 0; j < getMaskedBoard().length; j++) {
-				System.out.print(getMaskedBoard()[i][j]);
-				System.out.print(" ");
-			}
-			System.out.println();
-		}
-		*/
 	}
 	
 	private ChoiceBox<Integer> newBox() {
