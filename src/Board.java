@@ -183,9 +183,6 @@ public class Board {
 			response = fillIn(board, 0, 0, n, time, limit);
 			count++;
 		}
-		System.out.print("Count: ");
-		System.out.print(count-1);
-		System.out.print(". ");
 	}
 	
 	//make a board mask at random
@@ -212,6 +209,18 @@ public class Board {
 		}
 		
 		return 1;
+	}
+	
+	//return whether there are any non-filled values
+	public boolean hasNull() {
+		for (int i = 0; i < boxes.length; i++) {
+			for (int j = 0; j < boxes.length; j++) {
+				if (boxes[i][j] != null) {
+					if (boxes[i][j].getValue() == null) { return true; }
+				}
+			}
+		}
+		return false;
 	}
 	
 	//check if a cell is correct
