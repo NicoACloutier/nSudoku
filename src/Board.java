@@ -5,12 +5,15 @@ import javafx.scene.control.Label;
 import java.util.ArrayList;
 import javafx.scene.control.ChoiceBox;
 import java.lang.System;
+import javafx.geometry.Pos;
 
 public class Board {
 	private Integer n;
 	private Integer[][] board;
 	private boolean[][] mask;
 	private ChoiceBox<Integer>[][] boxes;
+	
+	private static int BOX_DIM = 29; //box dimension
 	
 	private static double getLimit(Integer aN) {
 		if (aN <= 4) { return 100 * aN; } //linear for smaller numbers
@@ -141,17 +144,7 @@ public class Board {
 		
 		int nSquared = n*n;
 		boxes = new ChoiceBox[nSquared][nSquared];
-		
-		for (int i = 0; i < nSquared; i++) {
-			for (int j = 0; j < nSquared; j++) {
-				if (mask[i][j]) {
-					ChoiceBox<Integer> box = newBox();
-					boxes[i][j] = box;
-					pane.add(box, i+1, j+1);
-				}
-				else { pane.add(new Label(Integer.toString(board[i][j])), i+1, j+1); }
-			}
-		}
+		makeGrid(pane);
 	}
 	
 	public Board(Integer enteredN) {
@@ -163,9 +156,61 @@ public class Board {
 		}
 	}
 	
+	private void makeGrid(GridPane pane) {
+		int nSquared = n*n;
+		int iPlace = 1;
+		int jPlace = 1;
+		int dim = (int) Board.BOX_DIM / 3;
+		for (int i = 0; i < nSquared; i++) {
+			if (i != 0 && i % n == 0) {
+				Label label = new Label();
+				label.setMaxWidth(dim);
+				label.setMinWidth(dim);
+				label.setMaxHeight(dim);
+				label.setMinHeight(dim);
+				pane.add(label, iPlace, jPlace); 
+				iPlace++;
+			}
+			for (int j = 0; j < nSquared; j++) {
+				if (j != 0 && j % n == 0) {
+					Label label = new Label();
+					label.setMaxWidth(dim);
+					label.setMinWidth(dim);
+					label.setMaxHeight(dim);
+					label.setMinHeight(dim);
+					pane.add(label, iPlace, jPlace);
+					jPlace++;
+				}
+				
+				if (mask[i][j]) {
+					ChoiceBox<Integer> box = newBox();
+					box.setMaxWidth(Board.BOX_DIM);
+					box.setMinWidth(Board.BOX_DIM);
+					box.setMaxHeight(Board.BOX_DIM);
+					box.setMinHeight(Board.BOX_DIM);
+					boxes[i][j] = box;
+					pane.add(box, iPlace, jPlace);
+				}
+				else {
+					Label label = new Label(Integer.toString(board[i][j]));
+					label.setMaxWidth(Board.BOX_DIM);
+					label.setMinWidth(Board.BOX_DIM);
+					label.setMaxHeight(Board.BOX_DIM);
+					label.setMinHeight(Board.BOX_DIM);
+					label.setAlignment(Pos.CENTER);
+					pane.add(label, iPlace, jPlace);
+				}
+				jPlace++;
+			}
+			iPlace++;
+			jPlace = 1;
+		}
+	}
+	
 	private ChoiceBox<Integer> newBox() {
 		ChoiceBox<Integer> nBox = new ChoiceBox<Integer>();
 		for (int i = 1; i <= board.length; i++) { nBox.getItems().add(i); }
+		nBox.getStyleClass().add("choicebox1");
 		return nBox;
 	}
 	
